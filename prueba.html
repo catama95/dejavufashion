@@ -1,0 +1,2203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dejavu Fashion YV</title>
+<!-- SDK de Mercado Pago -->
+<script src="https://sdk.mercadopago.com/js/v2"></script>
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+        color: #333;
+        background-image: url('https://images.unsplash.com/photo-1551232864-3f0890e580d9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1887&q=80');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        background-color: #f8f9fa;
+    }
+    
+    /* Capa oscura semi-transparente para mejorar legibilidad */
+    body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+    }
+    
+    header {
+        background: rgba(44, 62, 80, 0.9);
+        color: white;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+    
+    .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+    }
+    
+    .logo-img {
+        height: 60px;
+        width: auto;
+        border-radius: 5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    nav ul {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+    
+    nav li {
+        margin: 0;
+    }
+    
+    nav a {
+        color: white;
+        text-decoration: none;
+        font-weight: 500;
+        padding: 8px 12px;
+        border-radius: 4px;
+        transition: all 0.3s;
+    }
+    
+    nav a:hover {
+        background-color: rgba(255,255,255,0.2);
+    }
+    
+    section {
+        padding: 2rem;
+        margin: 20px;
+        background-color: rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .hidden-section {
+        display: none;
+    }
+    
+    .active-section {
+        display: block;
+    }
+    
+    .coleccion {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .producto {
+        position: relative;
+        width: 200px;
+        margin-bottom: 20px;
+        text-align: center;
+        display: none;
+        background-color: white;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+    
+    .producto.active {
+        display: block;
+    }
+    
+    .producto:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .coleccion img {
+        width: 200px;
+        height: 200px;
+        object-fit: cover;
+        border: 1px solid #ddd;
+        transition: transform 0.3s;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    
+    .coleccion img:hover {
+        transform: scale(1.05);
+    }
+    
+    .precio {
+        margin-top: 5px;
+        font-weight: bold;
+        color: #2c3e50;
+        font-size: 1.1em;
+    }
+    
+    .tallas {
+        margin-top: 5px;
+        font-size: 0.9em;
+        color: #666;
+    }
+    
+    .tallas ul {
+        list-style: none;
+        padding: 0;
+        margin: 5px 0 0;
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    
+    .tallas li {
+        border: 1px solid #ddd;
+        padding: 2px 6px;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: all 0.2s;
+    }
+    
+    .tallas li:hover {
+        background-color: #f0f0f0;
+    }
+    
+    .tallas li.seleccionada {
+        background-color: #2c3e50;
+        color: white;
+        border-color: #2c3e50;
+    }
+    
+    form {
+        max-width: 400px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    label {
+        margin-top: 10px;
+    }
+    
+    input, textarea, select {
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: rgba(255,255,255,0.8);
+    }
+    
+    button {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        margin-top: 10px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background 0.3s;
+    }
+    
+    button:hover {
+        background: #2980b9;
+    }
+    
+    footer {
+        background: rgba(44, 62, 80, 0.9);
+        color: white;
+        text-align: center;
+        padding: 1.5rem;
+        margin-top: 30px;
+    }
+    
+    footer a {
+        color: #3498db;
+        margin: 0 10px;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+    
+    footer a:hover {
+        color: #f1c40f;
+    }
+    
+    #carrito-section {
+        min-height: 100px;
+        border: 1px dashed #ccc;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    
+    #user-greeting {
+        color: #f1c40f;
+        font-weight: bold;
+    }
+    
+    .categorias {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .categoria-btn {
+        padding: 8px 16px;
+        background: #ecf0f1;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .categoria-btn:hover {
+        background: #bdc3c7;
+    }
+    
+    .categoria-btn.active {
+        background: #3498db;
+        color: white;
+    }
+    
+    .producto-carrito {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .producto-imagen {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        margin-right: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    .producto-info {
+        flex: 2;
+        display: flex;
+        align-items: center;
+    }
+    
+    .producto-precio {
+        flex: 1;
+        text-align: right;
+    }
+    
+    .producto-cantidad {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .producto-cantidad button {
+        padding: 2px 8px;
+        margin: 0 5px;
+    }
+    
+    .producto-total {
+        flex: 1;
+        text-align: right;
+        font-weight: bold;
+    }
+    
+    .resumen-carrito {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f9f9f9;
+        border-radius: 5px;
+    }
+    
+    .resumen-carrito p {
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .total-carrito {
+        font-size: 1.2em;
+        font-weight: bold;
+        border-top: 1px solid #ddd;
+        padding-top: 10px;
+        margin-top: 10px;
+    }
+    
+    .acciones-carrito {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+    
+    .vaciar-carrito {
+        background: #e74c3c;
+    }
+    
+    .vaciar-carrito:hover {
+        background: #c0392b;
+    }
+    
+    .pagar-btn {
+        background: #2ecc71;
+    }
+    
+    .pagar-btn:hover {
+        background: #27ae60;
+    }
+    
+    .producto-eliminar {
+        color: #e74c3c;
+        cursor: pointer;
+        margin-left: 10px;
+    }
+
+    .politicas-container {
+        margin-top: 40px;
+        padding: 20px;
+        background-color: rgba(248, 249, 250, 0.8);
+        border-radius: 8px;
+        border: 1px solid #e1e1e1;
+    }
+
+    .politicas-container h3 {
+        color: #2c3e50;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+
+    .politicas-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 10px;
+    }
+
+    .politica-link {
+        display: block;
+        padding: 8px 12px;
+        color: #3498db;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border-radius: 4px;
+        background-color: rgba(255,255,255,0.7);
+    }
+
+    .politica-link:hover {
+        background-color: #e8f4fc;
+        color: #2980b9;
+        text-decoration: underline;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-contenido {
+        background-color: #fefefe;
+        margin: 10% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 700px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .cerrar-modal {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .cerrar-modal:hover {
+        color: black;
+    }
+    
+    .forgot-password-link {
+        margin: 10px 0;
+        text-align: center;
+    }
+
+    .forgot-password-link a {
+        color: #3498db;
+        text-decoration: none;
+        font-size: 0.9em;
+    }
+
+    .forgot-password-link a:hover {
+        text-decoration: underline;
+    }
+
+    #recovery-message, #reset-message, #devolucion-message {
+        transition: all 0.3s ease;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+
+    .error-message {
+        background: #ffebee !important;
+        color: #c62828;
+        border: 1px solid #ef9a9a;
+    }
+
+    .success-message {
+        background: #e8f5e9 !important;
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+    }
+    
+    #devolucion-form {
+        max-width: 600px;
+        background-color: rgba(255,255,255,0.8);
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    #devolucion-form select {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    #devolucion-productos-lista {
+        border: 1px solid #eee;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 4px;
+        background-color: rgba(255,255,255,0.7);
+    }
+
+    .producto-devolucion {
+        display: flex;
+        align-items: center;
+        padding: 10px;
+        margin: 5px 0;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+        background-color: white;
+    }
+
+    .producto-devolucion:hover {
+        background-color: #f9f9f9;
+    }
+
+    .producto-devolucion input[type="checkbox"] {
+        margin-right: 15px;
+        transform: scale(1.2);
+    }
+
+    .producto-devolucion-info {
+        flex: 1;
+        font-size: 0.95em;
+    }
+
+    #productos-container {
+        max-height: 300px;
+        overflow-y: auto;
+        margin: 10px 0;
+        padding: 5px;
+        border: 1px solid #eee;
+        border-radius: 4px;
+    }
+    
+    .historial-compras {
+        margin-top: 30px;
+        border-top: 2px solid #eee;
+        padding-top: 20px;
+    }
+    
+    .compra-item {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: #f9f9f9;
+    }
+    
+    .compra-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+        border-bottom: 1px solid #ddd;
+    }
+    
+    .compra-id {
+        font-weight: bold;
+        color: #2c3e50;
+    }
+    
+    .compra-fecha {
+        color: #666;
+        font-size: 0.9em;
+    }
+    
+    .compra-total {
+        font-weight: bold;
+        text-align: right;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #ddd;
+    }
+    
+    .compra-productos {
+        margin-top: 10px;
+    }
+    
+    .producto-historial {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        border-bottom: 1px dashed #ddd;
+    }
+    
+    .producto-historial:last-child {
+        border-bottom: none;
+    }
+    
+    .producto-nombre {
+        flex: 2;
+    }
+    
+    .producto-cantidad-historial {
+        flex: 1;
+        text-align: center;
+    }
+    
+    .producto-precio-historial {
+        flex: 1;
+        text-align: right;
+    }
+    
+    .toggle-historial {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        margin-top: 10px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    
+    .toggle-historial:hover {
+        background: #2980b9;
+    }
+    
+    .no-compras {
+        color: #666;
+        font-style: italic;
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .codigo-compra {
+        background-color: #2c3e50;
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 1.1em;
+        margin: 10px 0;
+        display: inline-block;
+    }
+    
+    .confirmacion-compra {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 5px;
+        margin-top: 20px;
+    }
+    
+    .confirmacion-compra h3 {
+        color: #2e7d32;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    .resumen-confirmacion {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: #e8f5e9;
+        border-radius: 5px;
+    }
+    
+    .producto-resumen {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .buscar-compra-btn {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        margin-top: 5px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    
+    .buscar-compra-btn:hover {
+        background: #2980b9;
+    }
+
+    /* Estilos para el modal de producto */
+    .producto-modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.7);
+    }
+
+    .producto-modal-contenido {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .producto-modal-cerrar {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .producto-modal-cerrar:hover {
+        color: black;
+    }
+
+    .producto-modal-body {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .producto-modal-imagen {
+        flex: 1;
+        min-width: 250px;
+    }
+
+    .producto-modal-imagen img {
+        width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+        border-radius: 5px;
+    }
+
+    .producto-modal-info {
+        flex: 2;
+        min-width: 250px;
+    }
+
+    .producto-modal-precio {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #2c3e50;
+        margin: 10px 0;
+    }
+
+    .producto-modal-descripcion {
+        margin: 15px 0;
+        line-height: 1.6;
+    }
+
+    .producto-modal-tallas {
+        margin: 15px 0;
+    }
+
+    .producto-modal-tallas ul {
+        list-style: none;
+        padding: 0;
+        margin: 10px 0 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .producto-modal-tallas li {
+        border: 1px solid #ddd;
+        padding: 5px 10px;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: all 0.2s;
+    }
+
+    .producto-modal-tallas li:hover {
+        background-color: #f0f0f0;
+    }
+
+    .producto-modal-tallas li.seleccionada {
+        background-color: #2c3e50;
+        color: white;
+        border-color: #2c3e50;
+    }
+
+    .producto-modal-acciones {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-agregar-carrito {
+        background: #2ecc71;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 1em;
+        transition: background 0.3s;
+    }
+
+    .btn-agregar-carrito:hover {
+        background: #27ae60;
+    }
+
+    .btn-cerrar-modal {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 1em;
+        transition: background 0.3s;
+    }
+
+    .btn-cerrar-modal:hover {
+        background: #c0392b;
+    }
+
+    /* Estilos para el contenedor de Mercado Pago */
+    #wallet_container {
+        margin: 20px 0;
+    }
+
+    .mercado-pago-button {
+        background-color: #009ee3;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        display: block;
+        width: 100%;
+        text-align: center;
+        margin: 10px 0;
+    }
+
+    .mercado-pago-button:hover {
+        background-color: #0085c6;
+    }
+
+    .payment-methods {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    .payment-method {
+        border: 1px solid #ddd;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s;
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+    }
+
+    .payment-method:hover {
+        border-color: #009ee3;
+    }
+
+    .payment-method.selected {
+        border-color: #009ee3;
+        background-color: #f0f9ff;
+    }
+
+    .payment-method img {
+        max-width: 100%;
+        height: 30px;
+        object-fit: contain;
+    }
+</style>
+</head>
+<body>
+<header>
+    <div class="logo-container">
+        <img src="logo.png" alt="Dejavu Fashion Logo" class="logo-img">
+        <h1>Dejavu Fashion YV</h1>
+    </div>
+    <div>
+        <span id="user-greeting"></span>
+        <button id="logout-btn" style="display: none; margin-left: 10px;">Cerrar sesión</button>
+    </div>
+    <nav>
+        <ul>
+            <li><a href="#" data-section="coleccion">Colección</a></li>
+            <li><a href="#" data-section="carrito">Carrito <span id="carrito-contador">(0)</span></a></li>
+            <li><a href="#" data-section="contacto">Contacto</a></li>
+            <li><a href="#" data-section="login">Login</a></li>
+            <li><a href="#" data-section="registro">Registro</a></li>
+        </ul>
+    </nav>
+</header>
+
+<section id="coleccion" class="active-section">
+    <h2>Colección de Ropa Deportiva</h2>
+    <div class="categorias">
+        <button class="categoria-btn active" data-categoria="todos">Todos</button>
+        <button class="categoria-btn" data-categoria="hombre">Hombre</button>
+        <button class="categoria-btn" data-categoria="mujer">Mujer</button>
+    </div>
+    <div class="coleccion">
+        <!-- Productos para hombre -->
+        <div class="producto" data-categoria="hombre">
+            <img src="8.jpg" alt="Conjunto Deportivo Hombre 1" data-precio="25000">
+            <div class="precio">$25.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                    <li>XL</li>
+                </ul>
+            </div>
+        </div>
+        <div class="producto" data-categoria="hombre">
+            <img src="9.jpg" alt="Conjunto Deportivo Hombre 2" data-precio="24000">
+            <div class="precio">$24.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                    <li>XL</li>
+                </ul>
+            </div>
+        </div>
+        <div class="producto" data-categoria="hombre">
+            <img src="10.jpg" alt="Conjunto Deportivo Hombre 3" data-precio="24000">
+            <div class="precio">$24.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                    <li>XL</li>
+                </ul>
+            </div>
+        </div>
+        <div class="producto" data-categoria="hombre">
+            <img src="11.jpg" alt="Conjunto Deportivo Hombre 4" data-precio="26000">
+            <div class="precio">$26.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                    <li>XL</li>
+                </ul>
+            </div>
+        </div>
+        <div class="producto" data-categoria="hombre">
+            <img src="12.jpg" alt="Conjunto Deportivo Hombre 5" data-precio="25000">
+            <div class="precio">$25.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                    <li>XL</li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Productos para mujer -->
+        <div class="producto" data-categoria="mujer">
+            <img src="1.jpg" alt="Conjunto Deportivo Mujer 1" data-precio="24000">
+            <div class="precio">$24.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>XS</li>
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                </ul>
+            </div>
+        </div>
+        <div class="producto" data-categoria="mujer">
+            <img src="2.jpg" alt="Conjunto Deportivo Mujer 2" data-precio="24000">
+            <div class="precio">$24.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>XS</li>
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                </ul>
+            </div>
+        </div>
+        <div class="producto" data-categoria="mujer">
+            <img src="3.jpg" alt="Conjunto Deportivo Mujer 3" data-precio="24000">
+            <div class="precio">$24.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>XS</li>
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                </ul>
+            </div>
+        </div>
+        <div class="producto" data-categoria="mujer">
+            <img src="4.jpg" alt="Conjunto Deportivo Mujer 4" data-precio="24000">
+            <div class="precio">$24.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>XS</li>
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                </ul>
+            </div>
+        </div>
+        <div class="producto" data-categoria="mujer">
+            <img src="5.jpg" alt="Conjunto Deportivo Mujer 5" data-precio="24000">
+            <div class="precio">$24.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>XS</li>
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                </ul>
+            </div>
+        </div>
+        <div class="producto" data-categoria="mujer">
+            <img src="6.jpg" alt="Conjunto Deportivo Mujer 6" data-precio="26000">
+            <div class="precio">$26.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>XS</li>
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                </ul>
+            </div>
+        </div>
+        <div class="producto" data-categoria="mujer">
+            <img src="7.jpg" alt="Conjunto Deportivo Mujer 7" data-precio="26000">
+            <div class="precio">$26.000</div>
+            <div class="tallas">
+                <ul>
+                    <li>XS</li> 
+                    <li>S</li>
+                    <li>M</li>
+                    <li>L</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <p>Haz clic en una imagen para ver detalles del producto.</p>
+    
+    <div class="politicas-container">
+        <h3>Políticas y Términos</h3>
+        <div class="politicas-links">
+            <a href="#" class="politica-link" data-politica="cambios">Política de cambios y devoluciones</a>
+            <a href="#" class="politica-link" data-politica="datos">Política de tratamiento de datos personales</a>
+            <a href="#" class="politica-link" data-politica="privacidad">Política de privacidad</a>
+            <a href="#" class="politica-link" data-politica="cookies">Política de cookies</a>
+            <a href="#" class="politica-link" data-politica="terminos">Términos y condiciones</a>
+            <a href="#" class="politica-link" data-politica="faq">Preguntas frecuentes</a>
+            <a href="#" class="politica-link" data-section="devoluciones">Solicitar Devolución</a>
+        </div>
+    </div>
+</section>
+
+<!-- Resto de las secciones (carrito, contacto, login, registro, etc.) permanecen igual -->
+<section id="carrito" class="hidden-section">
+    <h2>Carrito de Compras</h2>
+    <div id="carrito-section">
+        <p>Tu carrito está vacío.</p>
+    </div>
+    
+    <div class="historial-compras">
+        <h3>Historial de Compras</h3>
+        <div id="historial-content"></div>
+    </div>
+</section>
+
+<section id="devoluciones" class="hidden-section">
+    <h2>Solicitud de Devolución</h2>
+    <form id="devolucion-form">
+        <label for="codigo-compra">Código de Compra (CUN):</label>
+        <input type="text" id="codigo-compra" name="codigo-compra" required>
+        <button type="button" id="buscar-compra-btn" class="buscar-compra-btn">Buscar Compra</button>
+        
+        <div id="productos-container" style="display: none;">
+            <h3>Productos de la compra</h3>
+            <p>Selecciona los productos que deseas devolver:</p>
+            <div id="devolucion-productos-lista"></div>
+        </div>
+        
+        <label for="devolucion-email">Correo Electrónico:</label>
+        <input type="email" id="devolucion-email" name="devolucion-email" required>
+        
+        <label for="devolucion-motivo">Motivo de la Devolución:</label>
+        <select id="devolucion-motivo" name="devolucion-motivo" required>
+            <option value="">Seleccione un motivo</option>
+            <option value="talla-incorrecta">Talla incorrecta</option>
+            <option value="producto-equivocado">Producto equivocado</option>
+            <option value="defectuoso">Producto defectuoso</option>
+            <option value="arrepentimiento">Arrepentimiento de compra</option>
+            <option value="otro">Otro motivo</option>
+        </select>
+        
+        <div id="otro-motivo-container" style="display: none;">
+            <label for="otro-motivo">Especifique otro motivo:</label>
+            <input type="text" id="otro-motivo" name="otro-motivo">
+        </div>
+        
+        <label for="devolucion-detalles">Detalles adicionales:</label>
+        <textarea id="devolucion-detalles" name="devolucion-detalles" rows="4"></textarea>
+        
+        <button type="submit">Solicitar Devolución</button>
+    </form>
+    <div id="devolucion-message" style="display: none; margin-top: 15px; padding: 10px; border-radius: 4px;"></div>
+</section>
+
+<section id="contacto" class="hidden-section">
+    <h2>Contacto</h2>
+    <form>
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required>
+        <label for="correo">Correo:</label>
+        <input type="email" id="correo" name="correo" required>
+        <label for="mensaje">Mensaje:</label>
+        <textarea id="mensaje" name="mensaje" required></textarea>
+        <button type="submit">Enviar</button>
+    </form>
+</section>
+
+<section id="login" class="hidden-section">
+    <h2>Iniciar Sesión</h2>
+    <form id="login-form">
+        <label for="email">Correo Electrónico:</label>
+        <input type="email" id="email" name="email" required>
+        <label for="password">Contraseña:</label>
+        <input type="password" id="password" name="password" required>
+        <button type="submit">Entrar</button>
+        <p class="forgot-password-link"><a href="#" id="forgot-password">¿Olvidaste tu contraseña?</a></p>
+    </form>
+    <p>¿No tienes cuenta? <a href="#" data-section="registro">Regístrate aquí</a></p>
+</section>
+
+<section id="registro" class="hidden-section">
+    <h2>Registro de Usuario</h2>
+    <form id="register-form">
+        <label for="reg-name">Nombre:</label>
+        <input type="text" id="reg-name" name="reg-name" required>
+        <label for="reg-email">Correo Electrónico:</label>
+        <input type="email" id="reg-email" name="reg-email" required>
+        <label for="reg-password">Contraseña:</label>
+        <input type="password" id="reg-password" name="reg-password" required>
+        <button type="submit">Registrarse</button>
+    </form>
+    <p>¿Ya tienes cuenta? <a href="#" data-section="login">Inicia sesión aquí</a></p>
+</section>
+
+<section id="recovery" class="hidden-section">
+    <h2>Recuperar Contraseña</h2>
+    <form id="recovery-form">
+        <label for="recovery-email">Correo Electrónico:</label>
+        <input type="email" id="recovery-email" name="recovery-email" required>
+        <button type="submit">Enviar Enlace de Recuperación</button>
+    </form>
+    <p><a href="#" data-section="login">Volver al inicio de sesión</a></p>
+    <div id="recovery-message" style="display: none; margin-top: 15px; padding: 10px; border-radius: 4px;"></div>
+</section>
+
+<section id="reset-password" class="hidden-section">
+    <h2>Restablecer Contraseña</h2>
+    <form id="reset-password-form">
+        <input type="hidden" id="reset-email">
+        <label for="new-password">Nueva Contraseña:</label>
+        <input type="password" id="new-password" name="new-password" required minlength="6">
+        <label for="confirm-password">Confirmar Nueva Contraseña:</label>
+        <input type="password" id="confirm-password" name="confirm-password" required>
+        <button type="submit">Restablecer Contraseña</button>
+    </form>
+    <div id="reset-message" style="display: none; margin-top: 15px; padding: 10px; border-radius: 4px;"></div>
+</section>
+
+<!-- Modal para políticas -->
+<div id="politica-modal" class="modal">
+    <div class="modal-contenido">
+        <span class="cerrar-modal">&times;</span>
+        <h2 id="modal-titulo"></h2>
+        <div id="modal-contenido"></div>
+    </div>
+</div>
+
+<!-- Modal para detalles del producto -->
+<div id="producto-modal" class="producto-modal">
+    <div class="producto-modal-contenido">
+        <span class="producto-modal-cerrar">&times;</span>
+        <div class="producto-modal-body">
+            <div class="producto-modal-imagen">
+                <img id="modal-imagen" src="" alt="Imagen del producto">
+            </div>
+            <div class="producto-modal-info">
+                <h2 id="modal-nombre"></h2>
+                <div class="producto-modal-precio" id="modal-precio"></div>
+                <div class="producto-modal-descripcion">
+                    <p id="modal-descripcion"></p>
+                </div>
+                <div class="producto-modal-tallas">
+                    <p>Tallas disponibles:</p>
+                    <ul id="modal-tallas"></ul>
+                </div>
+                <div class="producto-modal-acciones">
+                    <button class="btn-agregar-carrito" id="btn-agregar-carrito">Agregar a la compra</button>
+                    <button class="btn-cerrar-modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <p>Síguenos en redes sociales:</p>
+    <a href="https://wa.me/3147150029" target="_blank">WhatsApp</a> |
+    <a href="https://www.facebook.com/share/1AjvQrSrFr/?mibextid=wwXIfr" target="_blank">Facebook</a> |
+    <a href="https://instagram.com/dejavufashionyv" target="_blank">Instagram</a>
+    <p>&copy; 2025 Dejavu Fashion YV</p>
+</footer>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        // Credenciales de Mercado Pago (reemplaza con las tuyas)
+        const PUBLIC_KEY = 'APP_USR-ca7ae280-30fd-48f3-9d8a-24b7090219c5';
+        const ACCESS_TOKEN = 'APP_USR-263052647497373-050819-85f7a4569195d7d59d32a144f3463848-2425964863';
+        
+        // 1. Agregar evento al logo para volver a colección
+        document.querySelector('.logo-container').addEventListener('click', () => {
+            mostrarSeccion('coleccion');
+        });
+
+        // Función para mostrar sección y actualizar historial
+        function mostrarSeccion(sectionId) {
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.add('hidden-section');
+                section.classList.remove('active-section');
+            });
+            document.getElementById(sectionId).classList.add('active-section');
+            document.getElementById(sectionId).classList.remove('hidden-section');
+            
+            // Actualizar el historial del navegador
+            history.pushState({ section: sectionId }, '', `#${sectionId}`);
+            
+            // Lógica específica de sección
+            if (sectionId === 'devoluciones') {
+                const currentUser = localStorage.getItem("currentUser");
+                if (currentUser) {
+                    document.getElementById('devolucion-email').value = currentUser;
+                }
+            }
+            
+            if (sectionId === 'carrito') {
+                actualizarHistorialCompras();
+            }
+        }
+
+        // Manejar el evento popstate (cuando se usa el botón de retroceso)
+        window.addEventListener('popstate', (event) => {
+            if (event.state && event.state.section) {
+                mostrarSeccion(event.state.section);
+            } else {
+                // Por defecto mostrar colección
+                mostrarSeccion('coleccion');
+            }
+        });
+
+        // Modificar los event listeners de navegación para usar mostrarSeccion
+        document.querySelectorAll('a[data-section]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sectionId = link.getAttribute('data-section');
+                mostrarSeccion(sectionId);
+            });
+        });
+
+        const userGreeting = document.getElementById("user-greeting");
+        const logoutBtn = document.getElementById("logout-btn");
+
+        if (!localStorage.getItem("users")) {
+            localStorage.setItem("users", JSON.stringify([]));
+        }
+        
+        if (!localStorage.getItem("historialCompras")) {
+            localStorage.setItem("historialCompras", JSON.stringify([]));
+        }
+
+        const mostrarUsuario = () => {
+            const currentUserEmail = localStorage.getItem("currentUser");
+            const users = JSON.parse(localStorage.getItem("users"));
+            const currentUser = users.find(user => user.email === currentUserEmail);
+            const isLoggedIn = !!currentUserEmail;
+
+            if (isLoggedIn && currentUser) {
+                userGreeting.textContent = `Bienvenido/a, ${currentUser.name}`;
+                logoutBtn.style.display = "inline-block";
+            } else {
+                userGreeting.textContent = "";
+                logoutBtn.style.display = "none";
+            }
+        };
+
+        logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("currentUser");
+            alert("Sesión cerrada.");
+            mostrarUsuario();
+            carrito.length = 0;
+            actualizarCarrito();
+            actualizarContador();
+        });
+
+        const loginForm = document.getElementById("login-form");
+        loginForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const users = JSON.parse(localStorage.getItem("users"));
+
+            if (email && password) {
+                const user = users.find(u => u.email === email && u.password === password);
+                
+                if (user) {
+                    alert(`¡Bienvenido/a ${user.name}! Inicio de sesión exitoso.`);
+                    localStorage.setItem("currentUser", user.email);
+                    mostrarUsuario();
+                    mostrarSeccion("coleccion");
+                } else {
+                    alert("Correo o contraseña incorrectos.");
+                }
+            } else {
+                alert("Por favor, completa todos los campos.");
+            }
+        });
+
+        const registerForm = document.getElementById("register-form");
+        registerForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const name = document.getElementById("reg-name").value.trim();
+            const email = document.getElementById("reg-email").value.trim();
+            const password = document.getElementById("reg-password").value.trim();
+
+            if (name && email && password) {
+                const users = JSON.parse(localStorage.getItem("users"));
+                
+                if (users.some(user => user.email === email)) {
+                    alert("Este correo electrónico ya está registrado.");
+                    return;
+                }
+                
+                const newUser = { name, email, password };
+                users.push(newUser);
+                localStorage.setItem("users", JSON.stringify(users));
+                localStorage.setItem("currentUser", email);
+                
+                alert("Registro exitoso. Ahora estás conectado.");
+                registerForm.reset();
+                mostrarUsuario();
+                mostrarSeccion("coleccion");
+            } else {
+                alert("Completa todos los campos para registrarte.");
+            }
+        });
+
+        document.querySelectorAll('.categoria-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.categoria-btn').forEach(b => {
+                    b.classList.remove('active');
+                });
+                
+                btn.classList.add('active');
+                
+                const categoria = btn.dataset.categoria;
+                const productos = document.querySelectorAll('.producto');
+                
+                productos.forEach(producto => {
+                    if (categoria === 'todos' || producto.dataset.categoria === categoria) {
+                        producto.classList.add('active');
+                    } else {
+                        producto.classList.remove('active');
+                    }
+                });
+            });
+        });
+
+        document.querySelector('.categoria-btn[data-categoria="todos"]').click();
+
+        const carrito = [];
+        const carritoSection = document.getElementById("carrito-section");
+        const carritoContador = document.getElementById("carrito-contador");
+
+        const generarCodigoCompra = () => {
+            const añoActual = new Date().getFullYear();
+            const numerosAleatorios = Math.floor(1000 + Math.random() * 9000);
+            return `CUN-${numerosAleatorios}-${añoActual}`;
+        };
+
+        const actualizarContador = () => {
+            const totalItems = carrito.reduce((total, item) => total + item.cantidad, 0);
+            carritoContador.textContent = `(${totalItems})`;
+        };
+
+        const actualizarCarrito = () => {
+            if (carrito.length === 0) {
+                carritoSection.innerHTML = '<p>Tu carrito está vacío.</p>';
+            } else {
+                let html = '<div class="lista-productos">';
+                
+                carrito.forEach((item, index) => {
+                    const subtotal = (item.precio * item.cantidad).toFixed(2);
+                    html += `
+                    <div class="producto-carrito">
+                        <div class="producto-info">
+                            <img src="${item.imagen}" alt="${item.nombre}" class="producto-imagen">
+                            <div>
+                                <strong>${item.nombre}</strong> (${item.categoria}) - Talla: ${item.talla}
+                            </div>
+                        </div>
+                        <div class="producto-precio">
+                            $${item.precio.toFixed(2)}
+                        </div>
+                        <div class="producto-cantidad">
+                            <button class="disminuir" data-index="${index}">-</button>
+                            ${item.cantidad}
+                            <button class="aumentar" data-index="${index}">+</button>
+                        </div>
+                        <div class="producto-total">
+                            $${subtotal}
+                        </div>
+                        <span class="producto-eliminar" data-index="${index}">×</span>
+                    </div>
+                    `;
+                });
+                
+                const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+                const iva = subtotal * 0.19;
+                const envio = 5000;
+                const total = subtotal + iva + envio;
+                
+                html += `</div>
+                    <div class="resumen-carrito">
+                        <p><span>Subtotal:</span> <span>$${subtotal.toFixed(2)}</span></p>
+                        <p><span>IVA (19%):</span> <span>$${iva.toFixed(2)}</span></p>
+                        <p><span>Envío:</span> <span>$${envio.toFixed(2)}</span></p>
+                        <p class="total-carrito"><span>Total:</span> <span>$${total.toFixed(2)}</span></p>
+                    </div>
+                    <div class="acciones-carrito">
+                        <button class="vaciar-carrito">Vaciar Carrito</button>
+                        <button class="pagar-btn">Proceder al Pago</button>
+                    </div>
+                `;
+                
+                carritoSection.innerHTML = html;
+                
+                document.querySelectorAll('.disminuir').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const index = parseInt(btn.dataset.index);
+                        if (carrito[index].cantidad > 1) {
+                            carrito[index].cantidad--;
+                        } else {
+                            carrito.splice(index, 1);
+                        }
+                        actualizarCarrito();
+                        actualizarContador();
+                    });
+                });
+                
+                document.querySelectorAll('.aumentar').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const index = parseInt(btn.dataset.index);
+                        carrito[index].cantidad++;
+                        actualizarCarrito();
+                        actualizarContador();
+                    });
+                });
+                
+                document.querySelectorAll('.producto-eliminar').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const index = parseInt(btn.dataset.index);
+                        carrito.splice(index, 1);
+                        actualizarCarrito();
+                        actualizarContador();
+                    });
+                });
+                
+                document.querySelector('.vaciar-carrito').addEventListener('click', () => {
+                    carrito.length = 0;
+                    actualizarCarrito();
+                    actualizarContador();
+                });
+            }
+        };
+
+        // Modal de producto
+        const productoModal = document.getElementById("producto-modal");
+        const modalImagen = document.getElementById("modal-imagen");
+        const modalNombre = document.getElementById("modal-nombre");
+        const modalPrecio = document.getElementById("modal-precio");
+        const modalDescripcion = document.getElementById("modal-descripcion");
+        const modalTallas = document.getElementById("modal-tallas");
+        const btnAgregarCarrito = document.getElementById("btn-agregar-carrito");
+        const btnCerrarModal = document.querySelector(".btn-cerrar-modal");
+        const cerrarModal = document.querySelector(".producto-modal-cerrar");
+
+        let productoActual = null;
+        let tallaSeleccionada = null;
+
+        // Función para mostrar el modal del producto
+        function mostrarModalProducto(producto) {
+            productoActual = producto;
+            
+            // Obtener el elemento del producto para las tallas
+            const elementoProducto = document.querySelector(`.producto img[alt="${producto.nombre}"]`).parentElement;
+            
+            // Configurar los datos del modal
+            modalImagen.src = producto.imagen;
+            modalNombre.textContent = producto.nombre;
+            modalPrecio.textContent = `$${producto.precio.toFixed(2)}`;
+            modalDescripcion.textContent = `Conjunto deportivo ${producto.categoria === 'hombre' ? 'para hombre' : 'para mujer'} de alta calidad. Diseño cómodo y moderno para tus actividades deportivas.`;
+            
+            // Configurar las tallas
+            modalTallas.innerHTML = '';
+            const tallas = elementoProducto.querySelectorAll('.tallas li');
+            tallas.forEach(talla => {
+                const li = document.createElement('li');
+                li.textContent = talla.textContent;
+                li.addEventListener('click', () => {
+                    modalTallas.querySelectorAll('li').forEach(t => t.classList.remove('seleccionada'));
+                    li.classList.add('seleccionada');
+                    tallaSeleccionada = li.textContent;
+                });
+                modalTallas.appendChild(li);
+            });
+            
+            // Mostrar el modal
+            productoModal.style.display = "block";
+        }
+
+        // Cerrar modal
+        function cerrarModalProducto() {
+            productoModal.style.display = "none";
+            productoActual = null;
+            tallaSeleccionada = null;
+        }
+
+        cerrarModal.addEventListener('click', cerrarModalProducto);
+        btnCerrarModal.addEventListener('click', cerrarModalProducto);
+        window.addEventListener('click', (e) => {
+            if (e.target === productoModal) {
+                cerrarModalProducto();
+            }
+        });
+
+        // Agregar al carrito desde el modal
+        btnAgregarCarrito.addEventListener('click', () => {
+            if (!tallaSeleccionada) {
+                alert("Por favor selecciona una talla antes de agregar al carrito.");
+                return;
+            }
+            
+            const productoExistente = carrito.find(item => 
+                item.nombre === productoActual.nombre && item.talla === tallaSeleccionada);
+            
+            if (productoExistente) {
+                productoExistente.cantidad++;
+            } else {
+                carrito.push({
+                    nombre: productoActual.nombre,
+                    categoria: productoActual.categoria,
+                    precio: productoActual.precio,
+                    imagen: productoActual.imagen,
+                    talla: tallaSeleccionada,
+                    cantidad: 1
+                });
+            }
+            
+            actualizarCarrito();
+            actualizarContador();
+            cerrarModalProducto();
+            alert("Producto agregado al carrito");
+        });
+
+        // Modificar el evento click de los productos para mostrar el modal
+        document.querySelectorAll('.producto').forEach(producto => {
+            const img = producto.querySelector('img');
+            img.addEventListener('click', () => {
+                const nombre = img.alt;
+                const categoria = producto.dataset.categoria;
+                const precio = parseFloat(img.dataset.precio);
+                const imagen = img.src;
+                
+                mostrarModalProducto({
+                    nombre,
+                    categoria,
+                    precio,
+                    imagen
+                });
+            });
+        });
+
+        document.querySelectorAll('.tallas li').forEach(talla => {
+            talla.addEventListener('click', function() {
+                this.parentElement.querySelectorAll('li').forEach(t => {
+                    t.classList.remove('seleccionada');
+                });
+                this.classList.add('seleccionada');
+            });
+        });
+
+        const modal = document.getElementById("politica-modal");
+        const modalTitulo = document.getElementById("modal-titulo");
+        const modalContenido = document.getElementById("modal-contenido");
+        const cerrarModalPolitica = document.querySelector(".cerrar-modal");
+
+        const politicas = {
+            cambios: {
+                titulo: "Política de cambios y devoluciones",
+                contenido: `
+<p><strong>Política de Devoluciones:</strong></p>
+<p>Aceptamos devoluciones dentro de los 15 días posteriores a la recepción del producto. Para ser elegible para una devolución, su artículo debe estar sin usar, en las mismas condiciones en que lo recibió y en su empaque original.</p>
+
+<p><strong>¿Cómo solicitar una devolución?</strong></p>
+<p>Puede solicitar una devolución haciendo clic en el enlace "Solicitar Devolución" en esta sección de políticas. Necesitará tener a mano el código de su compra (CUN) y los datos del producto que desea devolver.</p>
+
+<p><strong>Proceso de Devolución:</strong></p>
+<ol>
+    <li>Complete el formulario de solicitud de devolución en nuestro sitio web.</li>
+    <li>Recibirá un correo electrónico con las instrucciones para proceder.</li>
+    <li>Empaque el producto cuidadosamente y envíelo a la dirección proporcionada.</li>
+    <li>Una vez recibido e inspeccionado, procesaremos su reembolso.</li>
+</ol>
+
+<p><strong>Reembolsos:</strong></p>
+<p>Los reembolsos se procesarán dentro de los 5 días hábiles posteriores a la recepción del artículo devuelto. El monto del reembolso será por el valor del producto, no incluye el costo de envío original.</p>
+
+<p><strong>Productos No Elegibles para Devolución:</strong></p>
+<ul>
+    <li>Productos usados o dañados</li>
+    <li>Productos sin su empaque original</li>
+    <li>Productos personalizados o hechos bajo pedido</li>
+</ul>
+
+<p>Para cualquier pregunta sobre devoluciones, contáctenos a través de nuestro formulario de contacto.</p>
+`
+            },
+            datos: {
+                titulo: "Política de tratamiento de datos personales",
+                contenido: "<p>Nos comprometemos a proteger tus datos personales. La información que nos proporcionas será utilizada únicamente para procesar tus pedidos y mejorar tu experiencia de compra.</p><p>Tus datos no serán compartidos con terceros sin tu consentimiento explícito.</p>"
+            },
+            privacidad: {
+                titulo: "Política de privacidad",
+                contenido: "<p>Respetamos tu privacidad. Toda la información personal que nos proporciones será tratada con confidencialidad y solo se utilizará para los fines establecidos en nuestras políticas.</p><p>Puedes solicitar en cualquier momento la eliminación de tus datos personales de nuestros sistemas.</p>"
+            },
+            cookies: {
+                titulo: "Política de cookies",
+                contenido: "<p>Utilizamos cookies para mejorar tu experiencia en nuestro sitio web. Las cookies nos ayudan a recordar tus preferencias y a entender cómo interactúas con nuestra plataforma.</p><p>Puedes gestionar o desactivar las cookies en la configuración de tu navegador.</p>"
+            },
+            terminos: {
+                titulo: "Términos y condiciones",
+                contenido: "<p>Al realizar una compra en nuestra tienda, aceptas nuestros términos y condiciones de venta. Nos reservamos el derecho de modificar estos términos en cualquier momento.</p><p>Los precios y disponibilidad de los productos están sujetos a cambio sin previo aviso.</p>"
+            },
+            faq: {
+                titulo: "Preguntas frecuentes",
+                contenido: "<p><strong>¿Cómo realizo un pedido?</strong><br>Selecciona los productos, agrégalos al carrito y completa el proceso de pago.</p><p><strong>¿Cuáles son los métodos de pago?</strong><br>Aceptamos tarjetas de crédito/débito y transferencias bancarias.</p><p><strong>¿Cuánto tarda el envío?</strong><br>El tiempo de entrega varía entre 3-5 días hábiles.</p>"
+            }
+        };
+
+        document.querySelectorAll('.politica-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const politica = link.dataset.politica;
+                const section = link.dataset.section;
+                
+                if (section) {
+                    mostrarSeccion(section);
+                } else if (politica) {
+                    // Si es un enlace a una política modal
+                    modalTitulo.textContent = politicas[politica].titulo;
+                    modalContenido.innerHTML = politicas[politica].contenido;
+                    modal.style.display = "block";
+                }
+            });
+        });
+
+        cerrarModalPolitica.addEventListener('click', () => {
+            modal.style.display = "none";
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = "none";
+            }
+        });
+
+        document.getElementById('forgot-password').addEventListener('click', (e) => {
+            e.preventDefault();
+            mostrarSeccion('recovery');
+        });
+
+        document.getElementById('recovery-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('recovery-email').value.trim();
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const user = users.find(u => u.email === email);
+            
+            const recoveryMessage = document.getElementById('recovery-message');
+            
+            if (user) {
+                const token = Date.now().toString(36) + Math.random().toString(36).substr(2);
+                user.resetToken = token;
+                user.resetTokenExpires = Date.now() + 3600000;
+                
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                setTimeout(() => {
+                    recoveryMessage.textContent = `Hemos enviado un enlace de recuperación a ${email}. Por favor revisa tu bandeja de entrada.`;
+                    recoveryMessage.className = 'success-message';
+                    recoveryMessage.style.display = 'block';
+                    
+                    const demoLink = document.createElement('button');
+                    demoLink.textContent = 'Simular acceso al enlace de recuperación';
+                    demoLink.style.marginTop = '10px';
+                    demoLink.style.padding = '8px 12px';
+                    demoLink.style.backgroundColor = '#3498db';
+                    demoLink.style.color = 'white';
+                    demoLink.style.border = 'none';
+                    demoLink.style.borderRadius = '4px';
+                    demoLink.style.cursor = 'pointer';
+                    
+                    demoLink.addEventListener('click', () => {
+                        mostrarSeccion('reset-password');
+                        document.getElementById('reset-email').value = email;
+                    });
+                    
+                    recoveryMessage.appendChild(document.createElement('br'));
+                    recoveryMessage.appendChild(demoLink);
+                }, 1000);
+            } else {
+                recoveryMessage.textContent = 'No existe una cuenta asociada a este correo electrónico.';
+                recoveryMessage.className = 'error-message';
+                recoveryMessage.style.display = 'block';
+            }
+        });
+
+        document.getElementById('reset-password-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('reset-email').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            
+            const resetMessage = document.getElementById('reset-message');
+            
+            if (newPassword !== confirmPassword) {
+                resetMessage.textContent = 'Las contraseñas no coinciden.';
+                resetMessage.className = 'error-message';
+                resetMessage.style.display = 'block';
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                resetMessage.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+                resetMessage.className = 'error-message';
+                resetMessage.style.display = 'block';
+                return;
+            }
+            
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const userIndex = users.findIndex(u => u.email === email);
+            
+            if (userIndex !== -1) {
+                users[userIndex].password = newPassword;
+                delete users[userIndex].resetToken;
+                delete users[userIndex].resetTokenExpires;
+                
+                localStorage.setItem('users', JSON.stringify(users));
+                
+                resetMessage.textContent = 'Tu contraseña ha sido restablecida correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.';
+                resetMessage.className = 'success-message';
+                resetMessage.style.display = 'block';
+                
+                document.getElementById('reset-password-form').reset();
+                
+                setTimeout(() => {
+                    mostrarSeccion('login');
+                }, 3000);
+            } else {
+                resetMessage.textContent = 'Error al restablecer la contraseña. Por favor intenta nuevamente.';
+                resetMessage.className = 'error-message';
+                resetMessage.style.display = 'block';
+            }
+        });
+
+        document.getElementById('devolucion-motivo').addEventListener('change', function() {
+            const otroMotivoContainer = document.getElementById('otro-motivo-container');
+            otroMotivoContainer.style.display = this.value === 'otro' ? 'block' : 'none';
+        });
+
+        // Buscar compra para devolución
+        document.getElementById('buscar-compra-btn').addEventListener('click', function() {
+            const codigoCompra = document.getElementById('codigo-compra').value.trim();
+            const email = document.getElementById('devolucion-email').value.trim();
+            
+            if (!codigoCompra) {
+                alert('Por favor ingrese el código de compra (CUN)');
+                return;
+            }
+            
+            const historialCompras = JSON.parse(localStorage.getItem('historialCompras')) || [];
+            const compra = historialCompras.find(c => c.codigo === codigoCompra);
+            
+            if (!compra) {
+                alert('No se encontró ninguna compra con ese código');
+                return;
+            }
+            
+            // Verificar que el email coincida con el de la compra
+            if (email && compra.usuario !== email) {
+                alert('El correo electrónico no coincide con el de la compra');
+                return;
+            }
+            
+            // Mostrar productos de la compra
+            const productosLista = document.getElementById('devolucion-productos-lista');
+            productosLista.innerHTML = '';
+            
+            compra.productos.forEach(producto => {
+                const productoDiv = document.createElement('div');
+                productoDiv.className = 'producto-devolucion';
+                productoDiv.innerHTML = `
+                    <input type="checkbox" id="prod-${producto.nombre}-${producto.talla}" name="productos-devolver" value="${producto.nombre} (${producto.talla})">
+                    <div class="producto-devolucion-info">
+                        <strong>${producto.nombre}</strong> (${producto.categoria})<br>
+                        Talla: ${producto.talla} | Cantidad: ${producto.cantidad} | Precio: $${producto.precio.toFixed(2)}
+                    </div>
+                `;
+                productosLista.appendChild(productoDiv);
+            });
+            
+            document.getElementById('productos-container').style.display = 'block';
+        });
+
+        document.getElementById('devolucion-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const codigoCompra = document.getElementById('codigo-compra').value.trim();
+            const email = document.getElementById('devolucion-email').value.trim();
+            const motivo = document.getElementById('devolucion-motivo').value;
+            const otroMotivo = motivo === 'otro' ? document.getElementById('otro-motivo').value.trim() : '';
+            const detalles = document.getElementById('devolucion-detalles').value.trim();
+            
+            // Obtener productos seleccionados para devolución
+            const productosCheckboxes = document.querySelectorAll('#devolucion-productos-lista input[type="checkbox"]:checked');
+            const productosDevolver = Array.from(productosCheckboxes).map(cb => cb.value).join(', ');
+            
+            if (!productosDevolver) {
+                alert('Por favor seleccione al menos un producto para devolver');
+                return;
+            }
+            
+            const devolucionMessage = document.getElementById('devolucion-message');
+            
+            let mensajeConfirmacion = `Solicitud de devolución recibida:\n\n`;
+            mensajeConfirmacion += `🔖 Código de Compra: ${codigoCompra}\n\n`;
+            mensajeConfirmacion += `🛍️ Productos a devolver:\n${productosDevolver}\n\n`;
+            mensajeConfirmacion += `📝 Motivo: ${motivo}`;
+            if (otroMotivo) mensajeConfirmacion += ` (${otroMotivo})`;
+            mensajeConfirmacion += `\nℹ️ Detalles: ${detalles || 'Ninguno'}`;
+            mensajeConfirmacion += `\n\nGracias por utilizar nuestro servicio de devoluciones. Nos comunicaremos con usted en breve.`;
+            
+            devolucionMessage.textContent = mensajeConfirmacion;
+            devolucionMessage.className = 'success-message';
+            devolucionMessage.style.display = 'block';
+            
+            this.reset();
+            document.getElementById('otro-motivo-container').style.display = 'none';
+            document.getElementById('productos-container').style.display = 'none';
+        });
+
+        // Función para inicializar Mercado Pago
+        function inicializarMercadoPago() {
+            return new MercadoPago(PUBLIC_KEY, {
+                locale: 'es-VE'
+            });
+        }
+
+        // Función procesarPago modificada para usar Mercado Pago
+        async function procesarPago(userEmail) {
+            const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+            const iva = subtotal * 0.19;
+            const envio = 5000;
+            const total = subtotal + iva + envio;
+            const codigoCompra = generarCodigoCompra();
+
+            try {
+                // Inicializar Mercado Pago
+                const mp = inicializarMercadoPago();
+
+                // Crear los items para el checkout
+                const items = carrito.map(item => ({
+                    title: `${item.nombre} (${item.talla})`,
+                    description: `Conjunto deportivo ${item.categoria === 'hombre' ? 'para hombre' : 'para mujer'}`,
+                    quantity: item.cantidad,
+                    unit_price: item.precio,
+                    currency_id: 'VES',
+                    picture_url: item.imagen,
+                    category_id: item.categoria === 'hombre' ? 'men' : 'women'
+                }));
+
+                // Agregar costo de envío como ítem adicional
+                items.push({
+                    title: "Costo de envío",
+                    quantity: 1,
+                    unit_price: envio,
+                    currency_id: 'VES'
+                });
+
+                // Crear preferencia de pago
+                const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${ACCESS_TOKEN}`
+                    },
+                    body: JSON.stringify({
+                        items: items,
+                        payer: {
+                            email: userEmail || "invitado@ejemplo.com",
+                            name: userEmail ? JSON.parse(localStorage.getItem("users")).find(u => u.email === userEmail).name : "Invitado"
+                        },
+                        external_reference: codigoCompra,
+                        back_urls: {
+                            success: window.location.href.split('#')[0] + '#carrito',
+                            failure: window.location.href.split('#')[0] + '#carrito',
+                            pending: window.location.href.split('#')[0] + '#carrito'
+                        },
+                        auto_return: "approved",
+                        notification_url: "https://tudominio.com/notificaciones",
+                        statement_descriptor: "DEJAVU FASHION",
+                        additional_info: `Compra en Dejavu Fashion YV - ${codigoCompra}`,
+                        shipments: {
+                            cost: envio,
+                            mode: "not_specified"
+                        }
+                    })
+                });
+
+                const preference = await response.json();
+
+                // Crear botón de pago
+                const bricksBuilder = mp.bricks();
+                await bricksBuilder.create("wallet", "wallet_container", {
+                    initialization: {
+                        preferenceId: preference.id
+                    },
+                    customization: {
+                        texts: {
+                            valueProp: "smart_option"
+                        }
+                    }
+                });
+
+                // Mostrar el contenedor del botón de pago
+                carritoSection.innerHTML = `
+                    <h3>Métodos de Pago</h3>
+                    <div id="wallet_container"></div>
+                    <div class="resumen-carrito">
+                        <p><span>Subtotal:</span> <span>$${subtotal.toFixed(2)}</span></p>
+                        <p><span>IVA (19%):</span> <span>$${iva.toFixed(2)}</span></p>
+                        <p><span>Envío:</span> <span>$${envio.toFixed(2)}</span></p>
+                        <p class="total-carrito"><span>Total:</span> <span>$${total.toFixed(2)}</span></p>
+                    </div>
+                    <button id="cancelar-pago" class="vaciar-carrito" style="margin-top: 20px;">Cancelar Pago</button>
+                `;
+
+                // Evento para cancelar pago
+                document.getElementById('cancelar-pago').addEventListener('click', () => {
+                    actualizarCarrito();
+                });
+
+                // Guardar la compra pendiente
+                const compraPendiente = {
+                    id: codigoCompra,
+                    codigo: codigoCompra,
+                    fecha: new Date().toLocaleString(),
+                    usuario: userEmail || 'invitado',
+                    productos: [...carrito],
+                    subtotal: subtotal,
+                    iva: iva,
+                    envio: envio,
+                    total: total,
+                    estado: 'pendiente',
+                    preferenceId: preference.id
+                };
+                localStorage.setItem('compraPendiente', JSON.stringify(compraPendiente));
+
+            } catch (error) {
+                console.error("Error al procesar el pago:", error);
+                carritoSection.innerHTML = `
+                    <div class="error-message" style="padding: 15px; margin-bottom: 20px;">
+                        Ocurrió un error al procesar el pago. Por favor intenta nuevamente.
+                        ${error.message}
+                    </div>
+                    ${carritoSection.innerHTML}
+                `;
+            }
+        }
+
+        // Función para verificar el estado del pago (se puede llamar al volver a la página)
+        function verificarEstadoPago() {
+            const compraPendiente = JSON.parse(localStorage.getItem('compraPendiente'));
+            if (!compraPendiente) return;
+
+            const queryParams = new URLSearchParams(window.location.search);
+            const collectionStatus = queryParams.get('collection_status');
+            const paymentId = queryParams.get('payment_id');
+            const preferenceId = queryParams.get('preference_id');
+
+            if (collectionStatus === 'approved' && preferenceId === compraPendiente.preferenceId) {
+                // Pago aprobado
+                mostrarConfirmacionCompra(compraPendiente);
+                localStorage.removeItem('compraPendiente');
+                
+                // Limpiar parámetros de la URL
+                history.replaceState(null, '', window.location.pathname + window.location.hash);
+            } else if (collectionStatus === 'pending') {
+                // Pago pendiente
+                carritoSection.innerHTML = `
+                    <div class="confirmacion-compra">
+                        <h3>Pago Pendiente</h3>
+                        <p>Tu pago está siendo procesado. Te notificaremos cuando sea aprobado.</p>
+                        <div class="codigo-compra">${compraPendiente.codigo}</div>
+                        <p>Puedes ver el estado de tu compra en tu historial.</p>
+                    </div>
+                `;
+            } else if (collectionStatus === 'rejected') {
+                // Pago rechazado
+                carritoSection.innerHTML = `
+                    <div class="error-message" style="padding: 15px; margin-bottom: 20px;">
+                        <h3>Pago Rechazado</h3>
+                        <p>Tu pago no pudo ser procesado. Por favor intenta con otro método de pago.</p>
+                        <button onclick="actualizarCarrito()" class="pagar-btn">Intentar nuevamente</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Función para mostrar confirmación de compra
+        function mostrarConfirmacionCompra(compra) {
+            let htmlConfirmacion = `
+                <div class="confirmacion-compra">
+                    <h3>¡Compra realizada con éxito!</h3>
+                    <p>Tu código de compra es:</p>
+                    <div class="codigo-compra">${compra.codigo}</div>
+                    
+                    <div class="resumen-confirmacion">
+                        <h4>Resumen de tu compra:</h4>
+                        <div class="lista-productos">
+            `;
+            
+            compra.productos.forEach(item => {
+                const subtotalItem = (item.precio * item.cantidad).toFixed(2);
+                htmlConfirmacion += `
+                    <div class="producto-resumen">
+                        <div class="producto-info">
+                            <img src="${item.imagen}" alt="${item.nombre}" class="producto-imagen">
+                            <div>
+                                <strong>${item.nombre}</strong> (${item.categoria}) - Talla: ${item.talla}
+                            </div>
+                        </div>
+                        <div class="producto-precio">
+                            $${item.precio.toFixed(2)} x ${item.cantidad} = $${subtotalItem}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            htmlConfirmacion += `
+                        </div>
+                        <div class="resumen-carrito">
+                            <p><span>Subtotal:</span> <span>$${compra.subtotal.toFixed(2)}</span></p>
+                            <p><span>IVA (19%):</span> <span>$${compra.iva.toFixed(2)}</span></p>
+                            <p><span>Envío:</span> <span>$${compra.envio.toFixed(2)}</span></p>
+                            <p class="total-carrito"><span>Total:</span> <span>$${compra.total.toFixed(2)}</span></p>
+                        </div>
+                        <p>Hemos enviado los detalles de tu compra a tu correo electrónico.</p>
+            `;
+            
+            if (compra.usuario && compra.usuario !== 'invitado') {
+                htmlConfirmacion += `<p>Puedes ver el detalle de esta compra en tu historial.</p>`;
+            } else {
+                htmlConfirmacion += `
+                    <p>Guarda este código para cualquier consulta sobre tu pedido.</p>
+                `;
+            }
+            
+            htmlConfirmacion += `
+                    </div>
+                </div>
+            `;
+            
+            // Guardar en historial de compras
+            const historialCompras = JSON.parse(localStorage.getItem("historialCompras")) || [];
+            const nuevaCompra = {
+                ...compra,
+                estado: 'completado',
+                fechaPago: new Date().toLocaleString()
+            };
+            historialCompras.unshift(nuevaCompra);
+            localStorage.setItem("historialCompras", JSON.stringify(historialCompras));
+            
+            carritoSection.innerHTML = htmlConfirmacion;
+            carrito.length = 0;
+            actualizarContador();
+            actualizarHistorialCompras();
+        }
+
+        // Evento para el botón de pago
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('pagar-btn') && !e.target.id) {
+                // Verificar que hay productos en el carrito
+                if (carrito.length === 0) {
+                    alert('No hay productos en el carrito');
+                    return;
+                }
+                
+                // Verificar que todos los productos tengan talla seleccionada
+                const productosSinTalla = carrito.some(item => !item.talla);
+                if (productosSinTalla) {
+                    alert('Por favor selecciona talla para todos los productos');
+                    return;
+                }
+                
+                procesarPago(localStorage.getItem("currentUser"));
+            }
+        });
+
+        const actualizarHistorialCompras = () => {
+            const historialContent = document.getElementById("historial-content");
+            const currentUserEmail = localStorage.getItem("currentUser");
+            
+            if (!currentUserEmail) {
+                historialContent.innerHTML = '<div class="no-compras">Inicia sesión para ver tu historial de compras</div>';
+                return;
+            }
+            
+            const historialCompras = JSON.parse(localStorage.getItem("historialCompras")) || [];
+            const comprasUsuario = historialCompras.filter(compra => compra.usuario === currentUserEmail);
+            
+            if (comprasUsuario.length === 0) {
+                historialContent.innerHTML = '<div class="no-compras">No tienes compras registradas</div>';
+                return;
+            }
+            
+            let html = '';
+            
+            comprasUsuario.forEach(compra => {
+                html += `
+                <div class="compra-item">
+                    <div class="compra-header">
+                        <span class="compra-id">Código: ${compra.codigo}</span>
+                        <span class="compra-fecha">${compra.fecha}</span>
+                    </div>
+                    <div class="compra-productos">
+                        ${compra.productos.map(producto => `
+                            <div class="producto-historial">
+                                <span class="producto-nombre">${producto.nombre} (${producto.talla})</span>
+                                <span class="producto-cantidad-historial">x${producto.cantidad}</span>
+                                <span class="producto-precio-historial">$${(producto.precio * producto.cantidad).toFixed(2)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="compra-total">
+                        Total: $${compra.total.toFixed(2)}
+                    </div>
+                </div>
+                `;
+            });
+            
+            historialContent.innerHTML = html;
+        };
+
+        // Inicialización
+        actualizarCarrito();
+        actualizarContador();
+        mostrarUsuario();
+        actualizarHistorialCompras();
+        verificarEstadoPago();
+
+        // Manejar la URL inicial
+        if (location.hash) {
+            const sectionId = location.hash.substring(1);
+            if (document.getElementById(sectionId)) {
+                mostrarSeccion(sectionId);
+            } else {
+                mostrarSeccion('coleccion');
+            }
+        } else {
+            mostrarSeccion('coleccion');
+        }
+    });
+</script>
+</body>
+</html>
