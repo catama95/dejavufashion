@@ -6,6 +6,10 @@
 <title>Dejavu Fashion YV</title>
 <!-- SDK de Mercado Pago -->
 <script src="https://sdk.mercadopago.com/js/v2"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
 <style>
     body {
         font-family: 'Arial', sans-serif;
@@ -1336,6 +1340,22 @@
 </footer>
 
 <script>
+    // Configuración de Firebase (reemplaza con tus credenciales)
+    const firebaseConfig = {
+     apiKey: "AIzaSyCpLySkyHTeGqROnYdgAE74YwyopBDR_xA",
+     authDomain: "dejavufashionyv-17ea4.firebaseapp.com",
+     projectId: "dejavufashionyv-17ea4",
+     storageBucket: "dejavufashionyv-17ea4.firebasestorage.app",
+     messagingSenderId: "668458684980",
+     appId: "1:668458684980:web:b514ab4694004847bf3061",
+     measurementId: "G-1006HH2Z3W"
+    };
+
+    // Inicializar Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
     document.addEventListener("DOMContentLoaded", () => {
         // Credenciales de Mercado Pago (reemplaza con las tuyas)
         const PUBLIC_KEY = 'APP_USR-ca7ae280-30fd-48f3-9d8a-24b7090219c5';
@@ -1360,9 +1380,9 @@
             
             // Lógica específica de sección
             if (sectionId === 'devoluciones') {
-                const currentUser = localStorage.getItem("currentUser");
-                if (currentUser) {
-                    document.getElementById('devolucion-email').value = currentUser;
+                const user = auth.currentUser;
+                if (user) {
+                    document.getElementById('devolucion-email').value = user.email;
                 }
             }
             
@@ -1393,36 +1413,139 @@
         const userGreeting = document.getElementById("user-greeting");
         const logoutBtn = document.getElementById("logout-btn");
 
-        if (!localStorage.getItem("users")) {
-            localStorage.setItem("users", JSON.stringify([]));
+        // Estado del carrito
+        let carrito = [];
+        let productos = [];
+
+        // Cargar productos desde Firestore
+        function cargarProductos() {
+            db.collection("productos").get().then((querySnapshot) => {
+                productos = [];
+                querySnapshot.forEach((doc) => {
+                    productos.push({ id: doc.id, ...doc.data() });
+                });
+                console.log("Productos cargados:", productos);
+            }).catch((error) => {
+                console.error("Error cargando productos:", error);
+            });
         }
-        
-        if (!localStorage.getItem("historialCompras")) {
-            localStorage.setItem("historialCompras", JSON.stringify([]));
+
+        // Cargar carrito desde Firestore
+        function cargarCarrito(userId) {
+            if (!userId) {
+                // Cargar carrito anónimo de localStorage
+                const carritoAnonimo = localStorage.getItem("carritoAnonimo");
+                if (carritoAnonimo) {
+                    carrito = JSON.parse(carritoAnonimo);
+                } else {
+                    carrito = [];
+                }
+                actualizarCarrito();
+                actualizarContador();
+                return;
+            }
+
+            db.collection("carritos").doc(userId).get().then((doc) => {
+                if (doc.exists) {
+                    carrito = doc.data().items || [];
+                    console.log("Carrito cargado:", carrito);
+                } else {
+                    carrito = [];
+                }
+                actualizarCarrito();
+                actualizarContador();
+            }).catch((error) => {
+                console.error("Error cargando carrito:", error);
+                carrito = [];
+                actualizarCarrito();
+                actualizarContador();
+            });
+        }
+
+        // Guardar carrito en Firestore
+        function guardarCarrito(userId) {
+            if (!userId) {
+                // Guardar en localStorage si no hay usuario autenticado
+                localStorage.setItem("carritoAnonimo", JSON.stringify(carrito));
+                return;
+            }
+
+            db.collection("carritos").doc(userId).set({
+                items: carrito,
+                ultimaActualizacion: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                console.log("Carrito guardado correctamente");
+            }).catch((error) => {
+                console.error("Error guardando carrito:", error);
+            });
         }
 
         const mostrarUsuario = () => {
-            const currentUserEmail = localStorage.getItem("currentUser");
-            const users = JSON.parse(localStorage.getItem("users"));
-            const currentUser = users.find(user => user.email === currentUserEmail);
-            const isLoggedIn = !!currentUserEmail;
+            const user = auth.currentUser;
+            const isLoggedIn = !!user;
 
-            if (isLoggedIn && currentUser) {
-                userGreeting.textContent = `Bienvenido/a, ${currentUser.name}`;
+            if (isLoggedIn) {
+                userGreeting.textContent = `Bienvenido/a, ${user.displayName || user.email}`;
                 logoutBtn.style.display = "inline-block";
+                // Cargar carrito del usuario
+                cargarCarrito(user.uid);
             } else {
                 userGreeting.textContent = "";
                 logoutBtn.style.display = "none";
+                // Cargar carrito anónimo
+                cargarCarrito(null);
             }
         };
 
+        // Observador de estado de autenticación
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // Usuario ha iniciado sesión
+                console.log("Usuario autenticado:", user);
+                mostrarUsuario();
+                
+                // Migrar carrito anónimo a usuario si existe
+                const carritoAnonimo = localStorage.getItem("carritoAnonimo");
+                if (carritoAnonimo) {
+                    const itemsAnonimos = JSON.parse(carritoAnonimo);
+                    if (itemsAnonimos.length > 0) {
+                        // Combinar carritos
+                        const carritoUsuario = carrito;
+                        itemsAnonimos.forEach(itemAnonimo => {
+                            const itemExistente = carritoUsuario.find(item => 
+                                item.id === itemAnonimo.id && item.talla === itemAnonimo.talla);
+                            
+                            if (itemExistente) {
+                                itemExistente.cantidad += itemAnonimo.cantidad;
+                            } else {
+                                carritoUsuario.push(itemAnonimo);
+                            }
+                        });
+                        
+                        carrito = carritoUsuario;
+                        guardarCarrito(user.uid);
+                        localStorage.removeItem("carritoAnonimo");
+                        actualizarCarrito();
+                        actualizarContador();
+                    }
+                }
+            } else {
+                // Usuario ha cerrado sesión
+                console.log("Usuario no autenticado");
+                mostrarUsuario();
+            }
+        });
+
         logoutBtn.addEventListener("click", () => {
-            localStorage.removeItem("currentUser");
-            alert("Sesión cerrada.");
-            mostrarUsuario();
-            carrito.length = 0;
-            actualizarCarrito();
-            actualizarContador();
+            auth.signOut().then(() => {
+                alert("Sesión cerrada.");
+                carrito.length = 0;
+                actualizarCarrito();
+                actualizarContador();
+            }).catch((error) => {
+                console.error("Error cerrando sesión:", error);
+                alert("Error al cerrar sesión. Por favor intenta nuevamente.");
+            });
         });
 
         const loginForm = document.getElementById("login-form");
@@ -1430,19 +1553,18 @@
             e.preventDefault();
             const email = document.getElementById("email").value;
             const password = document.getElementById("password").value;
-            const users = JSON.parse(localStorage.getItem("users"));
 
             if (email && password) {
-                const user = users.find(u => u.email === email && u.password === password);
-                
-                if (user) {
-                    alert(`¡Bienvenido/a ${user.name}! Inicio de sesión exitoso.`);
-                    localStorage.setItem("currentUser", user.email);
-                    mostrarUsuario();
-                    mostrarSeccion("coleccion");
-                } else {
-                    alert("Correo o contraseña incorrectos.");
-                }
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        alert(`¡Bienvenido/a ${user.email}! Inicio de sesión exitoso.`);
+                        mostrarSeccion("coleccion");
+                    })
+                    .catch((error) => {
+                        console.error("Error al iniciar sesión:", error);
+                        alert("Correo o contraseña incorrectos.");
+                    });
             } else {
                 alert("Por favor, completa todos los campos.");
             }
@@ -1456,22 +1578,26 @@
             const password = document.getElementById("reg-password").value.trim();
 
             if (name && email && password) {
-                const users = JSON.parse(localStorage.getItem("users"));
-                
-                if (users.some(user => user.email === email)) {
-                    alert("Este correo electrónico ya está registrado.");
-                    return;
-                }
-                
-                const newUser = { name, email, password };
-                users.push(newUser);
-                localStorage.setItem("users", JSON.stringify(users));
-                localStorage.setItem("currentUser", email);
-                
-                alert("Registro exitoso. Ahora estás conectado.");
-                registerForm.reset();
-                mostrarUsuario();
-                mostrarSeccion("coleccion");
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        
+                        // Guardar nombre del usuario en Firestore
+                        return db.collection("usuarios").doc(user.uid).set({
+                            nombre: name,
+                            email: email,
+                            fechaRegistro: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    })
+                    .then(() => {
+                        alert("Registro exitoso. Ahora estás conectado.");
+                        registerForm.reset();
+                        mostrarSeccion("coleccion");
+                    })
+                    .catch((error) => {
+                        console.error("Error al registrar:", error);
+                        alert(error.message);
+                    });
             } else {
                 alert("Completa todos los campos para registrarte.");
             }
@@ -1500,7 +1626,6 @@
 
         document.querySelector('.categoria-btn[data-categoria="todos"]').click();
 
-        const carrito = [];
         const carritoSection = document.getElementById("carrito-section");
         const carritoContador = document.getElementById("carrito-contador");
 
@@ -1522,17 +1647,18 @@
                 let html = '<div class="lista-productos">';
                 
                 carrito.forEach((item, index) => {
-                    const subtotal = (item.precio * item.cantidad).toFixed(2);
+                    const producto = productos.find(p => p.id === item.id) || item;
+                    const subtotal = (producto.precio * item.cantidad).toFixed(2);
                     html += `
                     <div class="producto-carrito">
                         <div class="producto-info">
-                            <img src="${item.imagen}" alt="${item.nombre}" class="producto-imagen">
+                            <img src="${producto.imagen}" alt="${producto.nombre}" class="producto-imagen">
                             <div>
-                                <strong>${item.nombre}</strong> (${item.categoria}) - Talla: ${item.talla}
+                                <strong>${producto.nombre}</strong> (${producto.categoria}) - Talla: ${item.talla}
                             </div>
                         </div>
                         <div class="producto-precio">
-                            $${item.precio.toFixed(2)}
+                            $${producto.precio.toFixed(2)}
                         </div>
                         <div class="producto-cantidad">
                             <button class="disminuir" data-index="${index}">-</button>
@@ -1547,7 +1673,10 @@
                     `;
                 });
                 
-                const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+                const subtotal = carrito.reduce((sum, item) => {
+                    const producto = productos.find(p => p.id === item.id) || item;
+                    return sum + (producto.precio * item.cantidad);
+                }, 0);
                 const iva = subtotal * 0.19;
                 const envio = 5000;
                 const total = subtotal + iva + envio;
@@ -1575,6 +1704,7 @@
                         } else {
                             carrito.splice(index, 1);
                         }
+                        guardarCarrito(auth.currentUser?.uid);
                         actualizarCarrito();
                         actualizarContador();
                     });
@@ -1584,6 +1714,7 @@
                     btn.addEventListener('click', () => {
                         const index = parseInt(btn.dataset.index);
                         carrito[index].cantidad++;
+                        guardarCarrito(auth.currentUser?.uid);
                         actualizarCarrito();
                         actualizarContador();
                     });
@@ -1593,6 +1724,7 @@
                     btn.addEventListener('click', () => {
                         const index = parseInt(btn.dataset.index);
                         carrito.splice(index, 1);
+                        guardarCarrito(auth.currentUser?.uid);
                         actualizarCarrito();
                         actualizarContador();
                     });
@@ -1600,6 +1732,7 @@
                 
                 document.querySelector('.vaciar-carrito').addEventListener('click', () => {
                     carrito.length = 0;
+                    guardarCarrito(auth.currentUser?.uid);
                     actualizarCarrito();
                     actualizarContador();
                 });
@@ -1624,9 +1757,6 @@
         function mostrarModalProducto(producto) {
             productoActual = producto;
             
-            // Obtener el elemento del producto para las tallas
-            const elementoProducto = document.querySelector(`.producto img[alt="${producto.nombre}"]`).parentElement;
-            
             // Configurar los datos del modal
             modalImagen.src = producto.imagen;
             modalNombre.textContent = producto.nombre;
@@ -1635,10 +1765,10 @@
             
             // Configurar las tallas
             modalTallas.innerHTML = '';
-            const tallas = elementoProducto.querySelectorAll('.tallas li');
+            const tallas = producto.tallas || ['S', 'M', 'L', 'XL'];
             tallas.forEach(talla => {
                 const li = document.createElement('li');
-                li.textContent = talla.textContent;
+                li.textContent = talla;
                 li.addEventListener('click', () => {
                     modalTallas.querySelectorAll('li').forEach(t => t.classList.remove('seleccionada'));
                     li.classList.add('seleccionada');
@@ -1674,12 +1804,13 @@
             }
             
             const productoExistente = carrito.find(item => 
-                item.nombre === productoActual.nombre && item.talla === tallaSeleccionada);
+                item.id === productoActual.id && item.talla === tallaSeleccionada);
             
             if (productoExistente) {
                 productoExistente.cantidad++;
             } else {
                 carrito.push({
+                    id: productoActual.id,
                     nombre: productoActual.nombre,
                     categoria: productoActual.categoria,
                     precio: productoActual.precio,
@@ -1689,6 +1820,7 @@
                 });
             }
             
+            guardarCarrito(auth.currentUser?.uid);
             actualizarCarrito();
             actualizarContador();
             cerrarModalProducto();
@@ -1704,12 +1836,18 @@
                 const precio = parseFloat(img.dataset.precio);
                 const imagen = img.src;
                 
-                mostrarModalProducto({
+                // Buscar el producto en la base de datos o usar los datos básicos
+                const productoEncontrado = productos.find(p => 
+                    p.nombre === nombre && p.categoria === categoria) || {
+                    id: `temp-${Date.now()}`,
                     nombre,
                     categoria,
                     precio,
-                    imagen
-                });
+                    imagen,
+                    tallas: ['S', 'M', 'L', 'XL']
+                };
+                
+                mostrarModalProducto(productoEncontrado);
             });
         });
 
@@ -1815,51 +1953,23 @@
         document.getElementById('recovery-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('recovery-email').value.trim();
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const user = users.find(u => u.email === email);
-            
             const recoveryMessage = document.getElementById('recovery-message');
             
-            if (user) {
-                const token = Date.now().toString(36) + Math.random().toString(36).substr(2);
-                user.resetToken = token;
-                user.resetTokenExpires = Date.now() + 3600000;
-                
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                setTimeout(() => {
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
                     recoveryMessage.textContent = `Hemos enviado un enlace de recuperación a ${email}. Por favor revisa tu bandeja de entrada.`;
                     recoveryMessage.className = 'success-message';
                     recoveryMessage.style.display = 'block';
-                    
-                    const demoLink = document.createElement('button');
-                    demoLink.textContent = 'Simular acceso al enlace de recuperación';
-                    demoLink.style.marginTop = '10px';
-                    demoLink.style.padding = '8px 12px';
-                    demoLink.style.backgroundColor = '#3498db';
-                    demoLink.style.color = 'white';
-                    demoLink.style.border = 'none';
-                    demoLink.style.borderRadius = '4px';
-                    demoLink.style.cursor = 'pointer';
-                    
-                    demoLink.addEventListener('click', () => {
-                        mostrarSeccion('reset-password');
-                        document.getElementById('reset-email').value = email;
-                    });
-                    
-                    recoveryMessage.appendChild(document.createElement('br'));
-                    recoveryMessage.appendChild(demoLink);
-                }, 1000);
-            } else {
-                recoveryMessage.textContent = 'No existe una cuenta asociada a este correo electrónico.';
-                recoveryMessage.className = 'error-message';
-                recoveryMessage.style.display = 'block';
-            }
+                })
+                .catch((error) => {
+                    recoveryMessage.textContent = 'No existe una cuenta asociada a este correo electrónico.';
+                    recoveryMessage.className = 'error-message';
+                    recoveryMessage.style.display = 'block';
+                });
         });
 
         document.getElementById('reset-password-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const email = document.getElementById('reset-email').value;
             const newPassword = document.getElementById('new-password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             
@@ -1879,30 +1989,34 @@
                 return;
             }
             
-            const users = JSON.parse(localStorage.getItem('users')) || [];
-            const userIndex = users.findIndex(u => u.email === email);
+            // Obtener el código de la URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const actionCode = urlParams.get('oobCode');
             
-            if (userIndex !== -1) {
-                users[userIndex].password = newPassword;
-                delete users[userIndex].resetToken;
-                delete users[userIndex].resetTokenExpires;
-                
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                resetMessage.textContent = 'Tu contraseña ha sido restablecida correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.';
-                resetMessage.className = 'success-message';
-                resetMessage.style.display = 'block';
-                
-                document.getElementById('reset-password-form').reset();
-                
-                setTimeout(() => {
-                    mostrarSeccion('login');
-                }, 3000);
-            } else {
-                resetMessage.textContent = 'Error al restablecer la contraseña. Por favor intenta nuevamente.';
+            if (!actionCode) {
+                resetMessage.textContent = 'Enlace de recuperación no válido.';
                 resetMessage.className = 'error-message';
                 resetMessage.style.display = 'block';
+                return;
             }
+            
+            auth.confirmPasswordReset(actionCode, newPassword)
+                .then(() => {
+                    resetMessage.textContent = 'Tu contraseña ha sido restablecida correctamente. Ahora puedes iniciar sesión con tu nueva contraseña.';
+                    resetMessage.className = 'success-message';
+                    resetMessage.style.display = 'block';
+                    
+                    document.getElementById('reset-password-form').reset();
+                    
+                    setTimeout(() => {
+                        mostrarSeccion('login');
+                    }, 3000);
+                })
+                .catch((error) => {
+                    resetMessage.textContent = 'Error al restablecer la contraseña. Por favor intenta nuevamente.';
+                    resetMessage.className = 'error-message';
+                    resetMessage.style.display = 'block';
+                });
         });
 
         document.getElementById('devolucion-motivo').addEventListener('change', function() {
@@ -1920,38 +2034,45 @@
                 return;
             }
             
-            const historialCompras = JSON.parse(localStorage.getItem('historialCompras')) || [];
-            const compra = historialCompras.find(c => c.codigo === codigoCompra);
-            
-            if (!compra) {
-                alert('No se encontró ninguna compra con ese código');
-                return;
-            }
-            
-            // Verificar que el email coincida con el de la compra
-            if (email && compra.usuario !== email) {
-                alert('El correo electrónico no coincide con el de la compra');
-                return;
-            }
-            
-            // Mostrar productos de la compra
-            const productosLista = document.getElementById('devolucion-productos-lista');
-            productosLista.innerHTML = '';
-            
-            compra.productos.forEach(producto => {
-                const productoDiv = document.createElement('div');
-                productoDiv.className = 'producto-devolucion';
-                productoDiv.innerHTML = `
-                    <input type="checkbox" id="prod-${producto.nombre}-${producto.talla}" name="productos-devolver" value="${producto.nombre} (${producto.talla})">
-                    <div class="producto-devolucion-info">
-                        <strong>${producto.nombre}</strong> (${producto.categoria})<br>
-                        Talla: ${producto.talla} | Cantidad: ${producto.cantidad} | Precio: $${producto.precio.toFixed(2)}
-                    </div>
-                `;
-                productosLista.appendChild(productoDiv);
-            });
-            
-            document.getElementById('productos-container').style.display = 'block';
+            // Buscar en Firestore
+            db.collection("compras").where("codigo", "==", codigoCompra).get()
+                .then((querySnapshot) => {
+                    if (querySnapshot.empty) {
+                        alert('No se encontró ninguna compra con ese código');
+                        return;
+                    }
+                    
+                    const compra = querySnapshot.docs[0].data();
+                    
+                    // Verificar que el email coincida con el de la compra
+                    if (email && compra.usuario !== email) {
+                        alert('El correo electrónico no coincide con el de la compra');
+                        return;
+                    }
+                    
+                    // Mostrar productos de la compra
+                    const productosLista = document.getElementById('devolucion-productos-lista');
+                    productosLista.innerHTML = '';
+                    
+                    compra.productos.forEach(producto => {
+                        const productoDiv = document.createElement('div');
+                        productoDiv.className = 'producto-devolucion';
+                        productoDiv.innerHTML = `
+                            <input type="checkbox" id="prod-${producto.nombre}-${producto.talla}" name="productos-devolver" value="${producto.nombre} (${producto.talla})">
+                            <div class="producto-devolucion-info">
+                                <strong>${producto.nombre}</strong> (${producto.categoria})<br>
+                                Talla: ${producto.talla} | Cantidad: ${producto.cantidad} | Precio: $${producto.precio.toFixed(2)}
+                            </div>
+                        `;
+                        productosLista.appendChild(productoDiv);
+                    });
+                    
+                    document.getElementById('productos-container').style.display = 'block';
+                })
+                .catch((error) => {
+                    console.error("Error buscando compra:", error);
+                    alert('Error al buscar la compra. Por favor intenta nuevamente.');
+                });
         });
 
         document.getElementById('devolucion-form').addEventListener('submit', function(e) {
@@ -1965,30 +2086,49 @@
             
             // Obtener productos seleccionados para devolución
             const productosCheckboxes = document.querySelectorAll('#devolucion-productos-lista input[type="checkbox"]:checked');
-            const productosDevolver = Array.from(productosCheckboxes).map(cb => cb.value).join(', ');
+            const productosDevolver = Array.from(productosCheckboxes).map(cb => cb.value);
             
-            if (!productosDevolver) {
+            if (!productosDevolver.length) {
                 alert('Por favor seleccione al menos un producto para devolver');
                 return;
             }
             
             const devolucionMessage = document.getElementById('devolucion-message');
             
-            let mensajeConfirmacion = `Solicitud de devolución recibida:\n\n`;
-            mensajeConfirmacion += `🔖 Código de Compra: ${codigoCompra}\n\n`;
-            mensajeConfirmacion += `🛍️ Productos a devolver:\n${productosDevolver}\n\n`;
-            mensajeConfirmacion += `📝 Motivo: ${motivo}`;
-            if (otroMotivo) mensajeConfirmacion += ` (${otroMotivo})`;
-            mensajeConfirmacion += `\nℹ️ Detalles: ${detalles || 'Ninguno'}`;
-            mensajeConfirmacion += `\n\nGracias por utilizar nuestro servicio de devoluciones. Nos comunicaremos con usted en breve.`;
-            
-            devolucionMessage.textContent = mensajeConfirmacion;
-            devolucionMessage.className = 'success-message';
-            devolucionMessage.style.display = 'block';
-            
-            this.reset();
-            document.getElementById('otro-motivo-container').style.display = 'none';
-            document.getElementById('productos-container').style.display = 'none';
+            // Guardar solicitud de devolución en Firestore
+            db.collection("devoluciones").add({
+                codigoCompra,
+                email,
+                motivo,
+                otroMotivo,
+                detalles,
+                productos: productosDevolver,
+                fechaSolicitud: firebase.firestore.FieldValue.serverTimestamp(),
+                estado: "pendiente"
+            })
+            .then(() => {
+                let mensajeConfirmacion = `Solicitud de devolución recibida:\n\n`;
+                mensajeConfirmacion += `🔖 Código de Compra: ${codigoCompra}\n\n`;
+                mensajeConfirmacion += `🛍️ Productos a devolver:\n${productosDevolver.join('\n')}\n\n`;
+                mensajeConfirmacion += `📝 Motivo: ${motivo}`;
+                if (otroMotivo) mensajeConfirmacion += ` (${otroMotivo})`;
+                mensajeConfirmacion += `\nℹ️ Detalles: ${detalles || 'Ninguno'}`;
+                mensajeConfirmacion += `\n\nGracias por utilizar nuestro servicio de devoluciones. Nos comunicaremos con usted en breve.`;
+                
+                devolucionMessage.textContent = mensajeConfirmacion;
+                devolucionMessage.className = 'success-message';
+                devolucionMessage.style.display = 'block';
+                
+                this.reset();
+                document.getElementById('otro-motivo-container').style.display = 'none';
+                document.getElementById('productos-container').style.display = 'none';
+            })
+            .catch((error) => {
+                console.error("Error guardando devolución:", error);
+                devolucionMessage.textContent = 'Error al procesar la solicitud. Por favor intenta nuevamente.';
+                devolucionMessage.className = 'error-message';
+                devolucionMessage.style.display = 'block';
+            });
         });
 
         // Función para inicializar Mercado Pago
@@ -1999,8 +2139,15 @@
         }
 
         // Función procesarPago modificada para usar Mercado Pago
-        async function procesarPago(userEmail) {
-            const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+        async function procesarPago() {
+            const user = auth.currentUser;
+            const userEmail = user ? user.email : "invitado@ejemplo.com";
+            const userName = user ? (user.displayName || user.email) : "Invitado";
+            
+            const subtotal = carrito.reduce((sum, item) => {
+                const producto = productos.find(p => p.id === item.id) || item;
+                return sum + (producto.precio * item.cantidad);
+            }, 0);
             const iva = subtotal * 0.19;
             const envio = 5000;
             const total = subtotal + iva + envio;
@@ -2011,15 +2158,18 @@
                 const mp = inicializarMercadoPago();
 
                 // Crear los items para el checkout
-                const items = carrito.map(item => ({
-                    title: `${item.nombre} (${item.talla})`,
-                    description: `Conjunto deportivo ${item.categoria === 'hombre' ? 'para hombre' : 'para mujer'}`,
-                    quantity: item.cantidad,
-                    unit_price: item.precio,
-                    currency_id: 'VES',
-                    picture_url: item.imagen,
-                    category_id: item.categoria === 'hombre' ? 'men' : 'women'
-                }));
+                const items = carrito.map(item => {
+                    const producto = productos.find(p => p.id === item.id) || item;
+                    return {
+                        title: `${producto.nombre} (${item.talla})`,
+                        description: `Conjunto deportivo ${producto.categoria === 'hombre' ? 'para hombre' : 'para mujer'}`,
+                        quantity: item.cantidad,
+                        unit_price: producto.precio,
+                        currency_id: 'VES',
+                        picture_url: producto.imagen,
+                        category_id: producto.categoria === 'hombre' ? 'men' : 'women'
+                    };
+                });
 
                 // Agregar costo de envío como ítem adicional
                 items.push({
@@ -2039,8 +2189,8 @@
                     body: JSON.stringify({
                         items: items,
                         payer: {
-                            email: userEmail || "invitado@ejemplo.com",
-                            name: userEmail ? JSON.parse(localStorage.getItem("users")).find(u => u.email === userEmail).name : "Invitado"
+                            email: userEmail,
+                            name: userName
                         },
                         external_reference: codigoCompra,
                         back_urls: {
@@ -2092,13 +2242,24 @@
                     actualizarCarrito();
                 });
 
-                // Guardar la compra pendiente
+                // Guardar la compra pendiente en Firestore
                 const compraPendiente = {
-                    id: codigoCompra,
                     codigo: codigoCompra,
                     fecha: new Date().toLocaleString(),
-                    usuario: userEmail || 'invitado',
-                    productos: [...carrito],
+                    usuario: userEmail,
+                    userId: user ? user.uid : null,
+                    productos: carrito.map(item => {
+                        const producto = productos.find(p => p.id === item.id) || item;
+                        return {
+                            id: producto.id,
+                            nombre: producto.nombre,
+                            categoria: producto.categoria,
+                            precio: producto.precio,
+                            imagen: producto.imagen,
+                            talla: item.talla,
+                            cantidad: item.cantidad
+                        };
+                    }),
                     subtotal: subtotal,
                     iva: iva,
                     envio: envio,
@@ -2106,7 +2267,8 @@
                     estado: 'pendiente',
                     preferenceId: preference.id
                 };
-                localStorage.setItem('compraPendiente', JSON.stringify(compraPendiente));
+                
+                await db.collection("comprasPendientes").doc(codigoCompra).set(compraPendiente);
 
             } catch (error) {
                 console.error("Error al procesar el pago:", error);
@@ -2121,19 +2283,47 @@
         }
 
         // Función para verificar el estado del pago (se puede llamar al volver a la página)
-        function verificarEstadoPago() {
-            const compraPendiente = JSON.parse(localStorage.getItem('compraPendiente'));
-            if (!compraPendiente) return;
-
+        async function verificarEstadoPago() {
             const queryParams = new URLSearchParams(window.location.search);
             const collectionStatus = queryParams.get('collection_status');
             const paymentId = queryParams.get('payment_id');
             const preferenceId = queryParams.get('preference_id');
+            
+            if (!preferenceId) return;
 
-            if (collectionStatus === 'approved' && preferenceId === compraPendiente.preferenceId) {
-                // Pago aprobado
-                mostrarConfirmacionCompra(compraPendiente);
-                localStorage.removeItem('compraPendiente');
+            // Buscar la compra pendiente en Firestore
+            const comprasPendientes = await db.collection("comprasPendientes")
+                .where("preferenceId", "==", preferenceId)
+                .limit(1)
+                .get();
+
+            if (comprasPendientes.empty) return;
+
+            const compraPendiente = comprasPendientes.docs[0].data();
+            const compraPendienteId = comprasPendientes.docs[0].id;
+
+            if (collectionStatus === 'approved') {
+                // Pago aprobado - mover a compras completadas
+                const compraCompletada = {
+                    ...compraPendiente,
+                    estado: 'completado',
+                    fechaPago: new Date().toLocaleString(),
+                    paymentId: paymentId
+                };
+                
+                // Guardar en compras completadas
+                await db.collection("compras").doc(compraPendienteId).set(compraCompletada);
+                
+                // Eliminar de pendientes
+                await db.collection("comprasPendientes").doc(compraPendienteId).delete();
+                
+                // Mostrar confirmación
+                mostrarConfirmacionCompra(compraCompletada);
+                
+                // Limpiar carrito
+                carrito.length = 0;
+                guardarCarrito(auth.currentUser?.uid);
+                actualizarContador();
                 
                 // Limpiar parámetros de la URL
                 history.replaceState(null, '', window.location.pathname + window.location.hash);
@@ -2200,7 +2390,7 @@
                         <p>Hemos enviado los detalles de tu compra a tu correo electrónico.</p>
             `;
             
-            if (compra.usuario && compra.usuario !== 'invitado') {
+            if (compra.userId) {
                 htmlConfirmacion += `<p>Puedes ver el detalle de esta compra en tu historial.</p>`;
             } else {
                 htmlConfirmacion += `
@@ -2213,19 +2403,7 @@
                 </div>
             `;
             
-            // Guardar en historial de compras
-            const historialCompras = JSON.parse(localStorage.getItem("historialCompras")) || [];
-            const nuevaCompra = {
-                ...compra,
-                estado: 'completado',
-                fechaPago: new Date().toLocaleString()
-            };
-            historialCompras.unshift(nuevaCompra);
-            localStorage.setItem("historialCompras", JSON.stringify(historialCompras));
-            
             carritoSection.innerHTML = htmlConfirmacion;
-            carrito.length = 0;
-            actualizarContador();
             actualizarHistorialCompras();
         }
 
@@ -2245,60 +2423,66 @@
                     return;
                 }
                 
-                procesarPago(localStorage.getItem("currentUser"));
+                procesarPago();
             }
         });
 
-        const actualizarHistorialCompras = () => {
+        const actualizarHistorialCompras = async () => {
             const historialContent = document.getElementById("historial-content");
-            const currentUserEmail = localStorage.getItem("currentUser");
+            const user = auth.currentUser;
             
-            if (!currentUserEmail) {
+            if (!user) {
                 historialContent.innerHTML = '<div class="no-compras">Inicia sesión para ver tu historial de compras</div>';
                 return;
             }
             
-            const historialCompras = JSON.parse(localStorage.getItem("historialCompras")) || [];
-            const comprasUsuario = historialCompras.filter(compra => compra.usuario === currentUserEmail);
-            
-            if (comprasUsuario.length === 0) {
-                historialContent.innerHTML = '<div class="no-compras">No tienes compras registradas</div>';
-                return;
+            try {
+                const querySnapshot = await db.collection("compras")
+                    .where("userId", "==", user.uid)
+                    .orderBy("fecha", "desc")
+                    .get();
+                
+                if (querySnapshot.empty) {
+                    historialContent.innerHTML = '<div class="no-compras">No tienes compras registradas</div>';
+                    return;
+                }
+                
+                let html = '';
+                
+                querySnapshot.forEach((doc) => {
+                    const compra = doc.data();
+                    html += `
+                    <div class="compra-item">
+                        <div class="compra-header">
+                            <span class="compra-id">Código: ${compra.codigo}</span>
+                            <span class="compra-fecha">${compra.fecha}</span>
+                        </div>
+                        <div class="compra-productos">
+                            ${compra.productos.map(producto => `
+                                <div class="producto-historial">
+                                    <span class="producto-nombre">${producto.nombre} (${producto.talla})</span>
+                                    <span class="producto-cantidad-historial">x${producto.cantidad}</span>
+                                    <span class="producto-precio-historial">$${(producto.precio * producto.cantidad).toFixed(2)}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="compra-total">
+                            Total: $${compra.total.toFixed(2)}
+                        </div>
+                    </div>
+                    `;
+                });
+                
+                historialContent.innerHTML = html;
+            } catch (error) {
+                console.error("Error cargando historial:", error);
+                historialContent.innerHTML = '<div class="no-compras">Error al cargar el historial de compras</div>';
             }
-            
-            let html = '';
-            
-            comprasUsuario.forEach(compra => {
-                html += `
-                <div class="compra-item">
-                    <div class="compra-header">
-                        <span class="compra-id">Código: ${compra.codigo}</span>
-                        <span class="compra-fecha">${compra.fecha}</span>
-                    </div>
-                    <div class="compra-productos">
-                        ${compra.productos.map(producto => `
-                            <div class="producto-historial">
-                                <span class="producto-nombre">${producto.nombre} (${producto.talla})</span>
-                                <span class="producto-cantidad-historial">x${producto.cantidad}</span>
-                                <span class="producto-precio-historial">$${(producto.precio * producto.cantidad).toFixed(2)}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="compra-total">
-                        Total: $${compra.total.toFixed(2)}
-                    </div>
-                </div>
-                `;
-            });
-            
-            historialContent.innerHTML = html;
         };
 
         // Inicialización
-        actualizarCarrito();
-        actualizarContador();
+        cargarProductos();
         mostrarUsuario();
-        actualizarHistorialCompras();
         verificarEstadoPago();
 
         // Manejar la URL inicial
@@ -2313,6 +2497,9 @@
             mostrarSeccion('coleccion');
         }
     });
+
+
 </script>
+
 </body>
 </html>
