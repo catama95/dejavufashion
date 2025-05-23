@@ -2165,7 +2165,7 @@
                         description: `Conjunto deportivo ${producto.categoria === 'hombre' ? 'para hombre' : 'para mujer'}`,
                         quantity: item.cantidad,
                         unit_price: producto.precio,
-                        currency_id: 'VES',
+                        currency_id: 'COP',
                         picture_url: producto.imagen,
                         category_id: producto.categoria === 'hombre' ? 'men' : 'women'
                     };
@@ -2176,7 +2176,7 @@
                     title: "Costo de envío",
                     quantity: 1,
                     unit_price: envio,
-                    currency_id: 'VES'
+                    currency_id: 'COP'
                 });
 
                 // Crear preferencia de pago
@@ -2194,12 +2194,12 @@
                         },
                         external_reference: codigoCompra,
                         back_urls: {
-                            success: window.location.href.split('#')[0] + '#carrito',
-                            failure: window.location.href.split('#')[0] + '#carrito',
-                            pending: window.location.href.split('#')[0] + '#carrito'
+                            success: "https://www.dejavufashionyv.com/#carrito",
+                            failure: "https://www.dejavufashionyv.com/#carrito",
+                            pending: "https://www.dejavufashionyv.com/#carrito"
                         },
                         auto_return: "approved",
-                        notification_url: "https://tudominio.com/notificaciones",
+                        notification_url: "https://www.dejavufashionyv.com/",
                         statement_descriptor: "DEJAVU FASHION",
                         additional_info: `Compra en Dejavu Fashion YV - ${codigoCompra}`,
                         shipments: {
